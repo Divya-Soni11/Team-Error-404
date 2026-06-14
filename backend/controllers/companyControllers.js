@@ -1,7 +1,6 @@
 import Product from "../schemas/productSchema.js";
 import jwt from "jsonwebtoken";
 import { supabase } from '../config/supabaseConfig.js';
-import Product from '../schemas/productSchema.js';
 
 
 //middleware for authorization to protected routes
