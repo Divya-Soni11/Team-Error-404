@@ -141,38 +141,92 @@ export const fetchCompanyProducts = async(req,res) =>{
 
 export const updateProduct = async (req, res) => {
     try {
-        const productId = req.params.id;  //product id appended at last of the endpoint by frontend
+        const productId = req.params.id;  // Product ID from URL parameters
         const companyId = req.company.id; // From verifyCompany middleware
-        const { name, category, description, images, supportingDocs } = req.body;
+        
+        // 1. Destructure text fields from req.body
+        const { name, category, description, externalLinks } = req.body;
 
+        // 2. Find the product and check existence
         const foundProduct = await Product.findById(productId);
         if (!foundProduct) {
             return res.status(404).json({ message: "Product not found." });
         }
 
-        // 2. Security Check: Does this product belong to the logged-in company?
-        // We use .toString() because product.company is a MongoDB ObjectId
+        // 3. Security Check: Ownership verification
         if (foundProduct.company.toString() !== companyId) {
             return res.status(403).json({ message: "Unauthorized. You can only update your own products." });
         }
 
-        
-        const updatedDocs = supportingDocs ? {
-            manuals: supportingDocs.manuals || foundProduct.supportingDocs.manuals,
-            externalLinks: supportingDocs.externalLinks || foundProduct.supportingDocs.externalLinks
-        } : foundProduct.supportingDocs;
+        // --- SUPABASE FILE HANDLING SECTION ---
 
-        // 4. Perform the update
+        // Initialize our update arrays with the existing URLs as the baseline fallback
+        let finalImageUrls = foundProduct.images; 
+        let finalManualUrls = foundProduct.supportingDocs?.manuals || [];
+
+        // Check if the frontend transmitted fresh files
+        if (req.files) {
+            // A. Process New Images (If uploaded, they REPLACE the old ones)
+            if (req.files['images'] && req.files['images'].length > 0) {
+                const newImageUrls = [];
+                for (const file of req.files['images']) {
+                    const fileName = `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`;
+                    
+                    const { error } = await supabase.storage
+                        .from('product-images')
+                        .upload(fileName, file.buffer, { contentType: file.mimetype });
+
+                    if (error) throw error;
+
+                    const { data: publicUrlData } = supabase.storage.from('product-images').getPublicUrl(fileName);
+                    newImageUrls.push(publicUrlData.publicUrl);
+                }
+                finalImageUrls = newImageUrls; // Overwrite baseline with new files
+            }
+
+            // B. Process New Manuals (If uploaded, they REPLACE the old ones)
+            if (req.files['manuals'] && req.files['manuals'].length > 0) {
+                const newManualUrls = [];
+                for (const file of req.files['manuals']) {
+                    const fileName = `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`;
+                    
+                    const { error } = await supabase.storage
+                        .from('product-manuals')
+                        .upload(fileName, file.buffer, { contentType: file.mimetype });
+
+                    if (error) throw error;
+
+                    const { data: publicUrlData } = supabase.storage.from('product-manuals').getPublicUrl(fileName);
+                    newManualUrls.push(publicUrlData.publicUrl);
+                }
+                finalManualUrls = newManualUrls; // Overwrite baseline with new files
+            }
+        }
+
+        // --- STRUCTURING THE UPDATE PAYLOAD ---
+
+        // Handle external links safely if provided in req.body
+        let finalExternalLinks = foundProduct.supportingDocs?.externalLinks || [];
+        if (externalLinks) {
+            finalExternalLinks = Array.isArray(externalLinks) 
+                ? externalLinks 
+                : externalLinks.split(',').map(link => link.trim());
+        }
+
+        // 4. Perform the update dynamically
         const updatedProduct = await Product.findByIdAndUpdate(
             productId,
             {
                 name: name || foundProduct.name,
                 category: category || foundProduct.category,
                 description: description || foundProduct.description,
-                images: images || foundProduct.images,
-                supportingDocs: updatedDocs
+                images: finalImageUrls, 
+                supportingDocs: {
+                    manuals: finalManualUrls,
+                    externalLinks: finalExternalLinks
+                }
             },
-            { new: true, runValidators: true } // Options: returns the new object & runs schema validations
+            { new: true, runValidators: true } // Returns the updated document back
         );
 
         return res.status(200).json({
