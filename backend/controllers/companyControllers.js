@@ -1,6 +1,7 @@
 import Product from "../schemas/productSchema.js";
 import jwt from "jsonwebtoken";
-
+import { supabase } from '../config/supabaseConfig.js';
+import Product from '../schemas/productSchema.js';
 
 
 //middleware for authorization to protected routes
@@ -27,45 +28,91 @@ export const verifyCompany = (req, res, next) => {
     }
 };
 
-export const addProduct=async (req,res)=>{
-    try{
-        const{name, category, description, images, supportingDocs}=req.body;
 
-        const productManuals=supportingDocs?.manuals || [];
-        const extLinks=supportingDocs?.externalLinks || [];
-        const companyId = req.company.id;      //from verifyCompany middleware
+export const addProduct = async (req, res) => {
+    try {
+        // 1. Extract plain text fields from req.body
+        const { name, category, description, externalLinks } = req.body;
+        const companyId = req.company.id; // From verifyCompany middleware
 
-        const existingProduct= await Product.findOne({name:name, company:companyId})
-
-        if(existingProduct){
-            return res.status(400).json({
-                message: "This product has already been added!"
-            });
+        // 2. Validation: Check required text elements
+        if (!name || !category || !description) {
+            return res.status(400).json({ message: "Please fill out all required fields." });
         }
 
-        const newProduct=new Product({
+        // 3. Prevent Duplicate Names for this company
+        const existingProduct = await Product.findOne({ name, company: companyId });
+        if (existingProduct) {
+            return res.status(400).json({ message: "You have already registered a product with this name." });
+        }
+
+        // 4. Initialize storage arrays for Supabase CDN URLs
+        const imageUrls = [];
+        const manualUrls = [];
+
+        // 5. Process and upload Images to Supabase (if provided)
+        if (req.files && req.files['images']) {
+            for (const file of req.files['images']) {
+                const fileName = `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`;
+                
+                const { error } = await supabase.storage
+                    .from('product-images')
+                    .upload(fileName, file.buffer, { contentType: file.mimetype });
+
+                if (error) throw error;
+
+                const { data: publicUrlData } = supabase.storage.from('product-images').getPublicUrl(fileName);
+                imageUrls.push(publicUrlData.publicUrl);
+            }
+        }
+
+        // 6. Process and upload Manuals to Supabase (if provided)
+        if (req.files && req.files['manuals']) {
+            for (const file of req.files['manuals']) {
+                const fileName = `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`;
+                
+                const { error } = await supabase.storage
+                    .from('product-manuals')
+                    .upload(fileName, file.buffer, { contentType: file.mimetype });
+
+                if (error) throw error;
+
+                const { data: publicUrlData } = supabase.storage.from('product-manuals').getPublicUrl(fileName);
+                manualUrls.push(publicUrlData.publicUrl);
+            }
+        }
+
+        // 7. Handle external links array safely if incoming as a comma-separated string or array
+        let parsedLinks = [];
+        if (externalLinks) {
+            parsedLinks = Array.isArray(externalLinks) ? externalLinks : externalLinks.split(',').map(link => link.trim());
+        }
+
+        // 8. Construct and Save the final Unified MongoDB Document
+        const newProduct = new Product({
             name,
-            company:companyId,
+            company: companyId,
             category,
             description,
-            images,
-            supportingDocs:{
-                manuals: productManuals,
-                externalLinks: extLinks
+            images: imageUrls, // Populated with Supabase links!
+            supportingDocs: {
+                manuals: manualUrls, // Populated with Supabase links!
+                externalLinks: parsedLinks
             }
         });
 
         await newProduct.save();
+
         return res.status(201).json({
-            message: "Product successfully added to catalogue!",
+            message: "Product catalogued completely in a single transaction!",
             product: newProduct
         });
-    }catch(error){
-        return res.status(500).json({
-            error: error.message
-        });
+
+    } catch (error) {
+        console.error("Unified Add Product Error: ", error.message);
+        return res.status(500).json({ message: "Server error while saving product data." });
     }
-}
+};
 
 export const fetchCompanyProducts = async(req,res) =>{
     try{
