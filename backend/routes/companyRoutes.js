@@ -1,5 +1,5 @@
 import express from 'express';
-import { upload } from '../middleware/multer.js';
+import { upload, validateFileSizes } from '../middleware/multer.js';
 import { 
     verifyCompany,
     addProduct, 
@@ -17,9 +17,9 @@ const productUploadFields = upload.fields([
     { name: 'manuals', maxCount: 3 }
 ]);
 
-router.post('/add-product', verifyCompany, productUploadFields, addProduct);
+router.post('/add-product', verifyCompany, productUploadFields, validateFileSizes, addProduct);
 router.get('/my-products', verifyCompany, fetchCompanyProducts);
-router.put('/update-product/:id', verifyCompany,productUploadFields, updateProduct);
+router.put('/update-product/:id', verifyCompany,productUploadFields, validateFileSizes, updateProduct);
 router.delete('/delete-product/:id', verifyCompany, deleteProduct);
 
 export default router;
