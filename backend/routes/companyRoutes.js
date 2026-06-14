@@ -19,7 +19,7 @@ const productUploadFields = upload.fields([
 
 router.post('/add-product', verifyCompany, productUploadFields, addProduct);
 router.get('/my-products', verifyCompany, fetchCompanyProducts);
-router.put('/update-product/:id', verifyCompany, updateProduct);
+router.put('/update-product/:id', verifyCompany,productUploadFields, updateProduct);
 router.delete('/delete-product/:id', verifyCompany, deleteProduct);
 
 export default router;

@@ -1,8 +1,8 @@
 import express from 'express';
 
 import { 
-    fetchAllProducts, 
-    // getProductByNameAndCompany, 
+    fetchAllProducts,
+    searchProduct,  
     // verifyUser,
     // reportIssue 
 } from '../controllers/userController.js';
@@ -12,7 +12,7 @@ const router = express.Router();
 
 // 1. Public Endpoints: Anyone can browse the catalogue
 router.get('/products', fetchAllProducts);
-// router.get('/products/search', getProductByNameAndCompany);
+router.get('/search-product', searchProduct);
 
 // 2. Protected Endpoints: Only logged-in users can report an issue
 // router.post('/report-issue', verifyUser, reportIssue);

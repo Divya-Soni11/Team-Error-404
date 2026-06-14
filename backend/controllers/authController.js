@@ -2,11 +2,18 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import Company from '../schemas/companySchema.js';
 import User from '../schemas/userSchema.js';
+import jwt from 'jsonwebtoken';
 
 
 export const registerCompany=async (req, res) => {
     try {
         const { name, email, password } = req.body;
+
+        if(!name||!email||!password){
+            return res.status(400).json({
+                message : "incomplete credentials"
+            });
+        }
 
         const existingCompany = await Company.findOne({ email });
         if (existingCompany) {
@@ -35,6 +42,12 @@ export const registerUser=async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
+        if(!name||!email||!password){
+            return res.status(400).json({
+                message : "incomplete credentials"
+            });
+        }
+
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "User email already registered" });
@@ -61,6 +74,12 @@ export const loginCompany= async (req,res)=>{
 
     try {
         const { email, password } = req.body;
+
+        if(!email||!password){
+            return res.status(400).json({
+                message : "incomplete credentials"
+            });
+        }
 
         const foundCompany = await Company.findOne({ email: email.toLowerCase() });
         
@@ -108,15 +127,23 @@ export const loginUser= async (req,res)=>{
     try {
         const { email, password } = req.body;
 
-        const foundUser = await Company.findOne({ email: email.toLowerCase() });
+        if(!email||!password){
+            return res.status(400).json({
+                message : "incomplete credentials"
+            });
+        }
+
+        const foundUser = await User.findOne({ email: email.toLowerCase() });
         
         if (!foundUser) {
+            console.log("email was wrong");
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
         const isMatch = await bcrypt.compare(password, foundUser.password);
         
         if (!isMatch) {
+            console.log("password was wrong");
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
@@ -136,7 +163,7 @@ export const loginUser= async (req,res)=>{
         return res.status(200).json({
             message: "Login successful!",
             token: token,
-            company: {
+            user: {
                 id: foundUser._id,
                 name: foundUser.name,
                 email: foundUser.email
