@@ -41,4 +41,11 @@ export const fetchAllProducts = async (req, res) => {
     }
 };
 
-export const 
+// export const fetchProductDetails = async (req,res) =>{
+//     try{
+//         const productId = req.params.id;
+        
+//     }catch(error){
+
+//     }
+// }
