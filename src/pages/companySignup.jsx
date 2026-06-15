@@ -1,17 +1,10 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import API from "../data/api.js"; // Your custom Axios instance
+import API from "../data/api.js"; // Central Axios instance
 
-export default function UserSignup() {
-  const [showPassword, setShowPassword] =
-    useState(false);
-
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState(false);
-
+export default function CompanySignup() {
   const [form, setForm] = useState({
-    fullName: "", // Fixed casing to match input name attribute
+    companyName: "", // Clear naming for company scope
     email: "",
     password: "",
     confirmPassword: "",
@@ -19,7 +12,7 @@ export default function UserSignup() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate(); // Hook to redirect users after signup
+  const navigate = useNavigate(); // For redirecting after successful registration
 
   const handleChange = (e) => {
     setForm({
@@ -28,47 +21,13 @@ export default function UserSignup() {
     });
   };
 
-  const getPasswordStrength = () => {
-    const pass = form.password;
-
-    if (pass.length < 8) return 20;
-
-    let score = 20;
-
-    if (/[A-Z]/.test(pass))
-      score += 20;
-
-    if (/[a-z]/.test(pass))
-      score += 20;
-
-    if (/\d/.test(pass))
-      score += 20;
-
-    if (/[@$!#%*?&]/.test(pass))
-      score += 20;
-
-    return Math.min(score, 100);
-  };
-
-  const isValidPassword = (
-    password
-  ) => {
-    return (
-      password.length >= 8 &&
-      /[A-Z]/.test(password) &&
-      /[a-z]/.test(password) &&
-      /\d/.test(password) &&
-      /[@$!#%*?&]/.test(password)
-    );
-  };
-
   const handleSignup = async () => {
     setError("");
     const missing = [];
 
-    // Validation checks
-    if (!form.fullName) missing.push("Full Name");
-    if (!form.email) missing.push("Email");
+    // Validation checks for company fields
+    if (!form.companyName) missing.push("Company Name");
+    if (!form.email) missing.push("Business Email");
     if (!form.password) missing.push("Password");
     if (!form.confirmPassword) missing.push("Confirm Password");
 
@@ -85,17 +44,16 @@ export default function UserSignup() {
     setLoading(true);
 
     try {
-      // API call matching your Express user endpoint
-      const response = await API.post("/auth/register-user", {
-        name: form.fullName,
+      // 🌟 Pointing to your explicit company registration route
+      const response = await API.post("/auth/register-company", {
+        name: form.companyName, // Maps frontend 'companyName' to your backend schema 'name'
         email: form.email,
         password: form.password,
       });
 
-      alert(response.data.message || "User Account Created Successfully!");
-      navigate("/user-login"); // Redirect to user login portal
+      alert(response.data.message || "Company Account Registered Successfully!");
+      navigate("/companyLogin"); // Redirect to company login panel route
     } catch (err) {
-      // Pulls the explicit error message sent from your backend response
       setError(err.response?.data?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
@@ -107,12 +65,12 @@ export default function UserSignup() {
       <div className="w-full max-w-3xl bg-slate-900 rounded-[40px] p-10 border border-slate-800">
         
         <h1 className="text-5xl font-bold text-center text-white">
-          User Registration
+          Company Registration
         </h1>
 
-          <p className="text-center text-slate-400 mt-4 mb-8">
-            Create your FixIt AI account
-          </p>
+        <p className="text-center text-slate-400 mt-4 mb-8">
+          Register your business on the FixIt platform
+        </p>
 
         {/* Dynamic Error Banner */}
         {error && (
@@ -123,9 +81,9 @@ export default function UserSignup() {
 
         <div className="grid md:grid-cols-2 gap-5">
           <input
-            name="fullName"
-            placeholder="Full Name"
-            value={form.fullName} // Linked correctly to state
+            name="companyName"
+            placeholder="Company Name"
+            value={form.companyName}
             onChange={handleChange}
             className="p-4 rounded-xl bg-slate-800 text-white border border-slate-700 focus:border-cyan-500 outline-none"
           />
@@ -133,7 +91,7 @@ export default function UserSignup() {
           <input
             type="email"
             name="email"
-            placeholder="Email Address"
+            placeholder="Business Email Address"
             value={form.email}
             onChange={handleChange}
             className="p-4 rounded-xl bg-slate-800 text-white border border-slate-700 focus:border-cyan-500 outline-none"
@@ -163,12 +121,12 @@ export default function UserSignup() {
           disabled={loading}
           className="w-full mt-8 py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-bold text-xl transition-all active:scale-[0.98] disabled:opacity-50"
         >
-          {loading ? "Registering..." : "Create Account"}
+          {loading ? "Registering Business..." : "Create Company Account"}
         </button>
 
         <p className="text-center text-slate-400 mt-8">
           Already Registered?
-          <Link to="/user-login" className="text-cyan-400 ml-2 hover:underline">
+          <Link to="/login" className="text-cyan-400 ml-2 hover:underline">
             Sign In
           </Link>
         </p>
@@ -177,4 +135,3 @@ export default function UserSignup() {
     </div>
   );
 }
-

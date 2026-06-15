@@ -32,8 +32,23 @@ export default function Sidebar() {
           Dashboard
         </NavLink>
 
-        {/* Conditionally render Catalog and Company Portal if logged in */}
-        {isCompany && (
+        {role === "user" && (
+          <NavLink
+            to="/diagnostic"
+            className={({ isActive }) =>
+              `flex items-center gap-4 px-4 py-4 rounded-xl text-xl ${
+                isActive
+                  ? "bg-slate-800 text-cyan-400"
+                  : "text-white hover:bg-slate-900"
+              }`
+            }
+          >
+            <FaRobot />
+            Diagnostic
+          </NavLink>
+        )}
+
+        {role === "company" && (
           <>
             <NavLink
               to="/catalog"
@@ -45,23 +60,10 @@ export default function Sidebar() {
                 }`
               }
             >
-              <FaList />
-              Catalog
+              <FaBuilding />
+              Add Product
             </NavLink>
 
-            <NavLink
-              to="/company"
-              className={({ isActive }) =>
-                `flex items-center gap-4 p-5 rounded-2xl text-2xl transition-all ${
-                  isActive
-                    ? "bg-slate-800 text-cyan-400"
-                    : "text-white hover:bg-slate-900"
-                }`
-              }
-            >
-              <FaBuilding />
-              Company Portal
-            </NavLink>
           </>
         )}
       </nav>

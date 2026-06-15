@@ -15,10 +15,12 @@ import Diagnostic from "./pages/Diagnostic";
 import CompanyPortal from "./pages/CompanyPortal";
 import Analytics from "./pages/Analytics";
 
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
 import UserLogin from "./pages/UserLogin";
 import UserSignup from "./pages/UserSignup";
+import CompanyLogin from "./pages/companyLogin";   // ✅ Matches companyLogin.jsx
+import CompanySignup from "./pages/companySignup"; // ✅ Matches companySignup.jsx
+
+import ProductDetails from "./pages/ProductDetails";
 
 function AppContent() {
   const location = useLocation();
@@ -28,8 +30,8 @@ function AppContent() {
   const isCompany = role === "company";
 
   const authPages = [
-    "/login",
-    "/signup",
+    "/companyLogin",   // ✅ CamelCase path token matches button navigation
+    "/companySignup",  // ✅ CamelCase path token matches button navigation
     "/user-login",
     "/user-signup",
   ];
@@ -53,38 +55,66 @@ function AppContent() {
     "/company",
   ];
 
-  const isFullScreen = fullScreenPages.includes(location.pathname);
+  const isAuthPage = authPages.includes(location.pathname);
+  const hideNavbar = hideNavbarPages.includes(location.pathname);
 
-  if (isFullScreen) {
+  // AUTH LAYER LAYER CONDITION ROUTING
+  if (isAuthPage) {
     return (
       <Routes>
-        <Route path="/diagnostic" element={<Diagnostic />} />
-        {/* Protect Company Portal Route */}
-        <Route 
-          path="/company" 
-          element={isCompany ? <CompanyPortal /> : <Navigate to="/" />} 
+
+        {/* User Workspace Routes */}
+        <Route
+          path="/user-login"
+          element={<UserLogin />}
+        />
+        <Route
+          path="/user-signup"
+          element={<UserSignup />}
+        />
+
+        <Route
+          path="/companyLogin"
+          element={<CompanyLogin />}
+        />
+
+        <Route
+          path="/companySignup"
+          element={<CompanySignup />}
         />
       </Routes>
     );
   }
 
+  // MAIN WORKSPACE LAYOUT LAYER
   return (
     <div className="flex min-h-screen bg-slate-950">
       <Sidebar />
       <div className="flex-1 flex flex-col">
-        <Navbar />
+        {!hideNavbar && <Navbar />}
         <div className="flex-1 overflow-auto">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            {/* Protect Catalog and Analytics Routes */}
-            <Route 
-              path="/catalog" 
-              element={isCompany ? <Catalog /> : <Navigate to="/" />} 
+            <Route
+              path="/"
+              element={<Dashboard />}
             />
-            <Route 
-              path="/analytics" 
-              element={isCompany ? <Analytics /> : <Navigate to="/" />} 
+            <Route
+              path="/catalog"
+              element={<Catalog />}
             />
+            <Route
+              path="/diagnostic"
+              element={<Diagnostic />}
+            />
+            <Route
+              path="/company"
+              element={<CompanyPortal />}
+            />
+            <Route
+              path="/analytics"
+              element={<Analytics />}
+            />
+            <Route path="/product/:id" element={<ProductDetails />} />
           </Routes>
         </div>
       </div>

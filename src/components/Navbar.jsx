@@ -11,16 +11,6 @@ import {
 export default function Navbar() {
   const [showLoginMenu, setShowLoginMenu] = useState(false);
 
-  // Check auth state
-  const role = localStorage.getItem("role");
-  const isCompany = role === "company";
-
-  // Handle Logout function
-  const handleLogout = () => {
-    localStorage.removeItem("role"); // Clear the role
-    window.location.href = "/"; // Force reload to dashboard
-  };
-
   return (
     <div className="h-24 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-10">
 
@@ -41,65 +31,55 @@ export default function Navbar() {
           type="text"
           placeholder="Search products, manuals, issues..."
           className="bg-transparent ml-4 text-white outline-none w-full"
+          className="bg-transparent ml-4 text-white outline-none w-full"
         />
       </div>
 
       {/* RIGHT */}
       <div className="flex items-center gap-8">
-        
-        {/* Notification Button/Link */}
-        <Link 
-          to="/notifications" 
-          className="relative hover:opacity-80 transition-opacity"
-          title="View Notifications"
-        >
-          <FaBell className="text-white text-2xl" />
-          <div className="absolute -top-3 -right-3 w-6 h-6 bg-red-500 border-2 border-slate-900 rounded-full flex items-center justify-center text-xs font-bold text-white">
+
+        {/* Notification */}
+        <div className="relative">
+          <FaBell className="text-white text-2xl cursor-pointer" />
+          <div className="absolute -top-3 -right-3 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs text-white">
             3
           </div>
-        </Link>
+        </div>
 
-        {/* CONDITIONAL LOGIN / LOGOUT */}
+        {/* LOGIN DROPDOWN */}
         <div className="relative">
-          {isCompany ? (
-            <button
-              onClick={handleLogout}
-              className="bg-red-500/10 border border-red-500 text-red-500 hover:bg-red-500 hover:text-white font-bold px-6 py-3 rounded-xl transition-colors"
-            >
-              Logout
-            </button>
-          ) : (
-            <>
-              <button
-                onClick={() => setShowLoginMenu(!showLoginMenu)}
-                className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold px-6 py-3 rounded-xl flex items-center gap-3 transition"
+          <button
+            onClick={() => setShowLoginMenu(!showLoginMenu)}
+            className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold px-6 py-3 rounded-xl flex items-center gap-3 transition"
+          >
+            Login
+            <FaChevronDown className={`transition-transform duration-300 ${showLoginMenu ? "rotate-180" : ""}`} />
+          </button>
+
+          {showLoginMenu && (
+            <div className="absolute right-0 mt-3 w-64 bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden shadow-2xl z-50">
+              
+              {/* 🌟 FIXED: Maps precisely to your camelCase router path /companyLogin */}
+              <Link
+                to="/companyLogin"
+                onClick={() => setShowLoginMenu(false)}
+                className="flex items-center gap-3 px-5 py-4 text-white hover:bg-slate-800 transition"
               >
-                Login
-                <FaChevronDown />
-              </button>
+                <FaBuilding className="text-cyan-400" />
+                Company Login
+              </Link>
 
-              {showLoginMenu && (
-                <div className="absolute right-0 mt-3 w-64 bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden shadow-2xl z-50">
-                  <Link
-                    to="/login"
-                    onClick={() => setShowLoginMenu(false)}
-                    className="flex items-center gap-3 px-5 py-4 text-white hover:bg-slate-800 transition"
-                  >
-                    <FaBuilding className="text-cyan-400" />
-                    Company Login
-                  </Link>
+              {/* User Login */}
+              <Link
+                to="/user-login"
+                onClick={() => setShowLoginMenu(false)}
+                className="flex items-center gap-3 px-5 py-4 text-white hover:bg-slate-800 transition border-t border-slate-800"
+              >
+                <FaUser className="text-green-400" />
+                User Login
+              </Link>
 
-                  <Link
-                    to="/user-login"
-                    onClick={() => setShowLoginMenu(false)}
-                    className="flex items-center gap-3 px-5 py-4 text-white hover:bg-slate-800 transition"
-                  >
-                    <FaUser className="text-green-400" />
-                    User Login
-                  </Link>
-                </div>
-              )}
-            </>
+            </div>
           )}
         </div>
 
