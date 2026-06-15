@@ -127,7 +127,8 @@ export const fetchCompanyProducts = async(req,res) =>{
 
         return res.status(200).json({
             message: "Products fetched successfully!",
-            products:companyProducts
+            products:companyProducts,
+            companyName:req.company.name
         });
 
     }catch(error){
@@ -269,3 +270,22 @@ export const deleteProduct = async (req, res) => {
         return res.status(500).json({ message: "Server error while deleting product." });
     }
 };
+
+export const viewProduct = async (req,res) =>{
+    try{
+        const productId=req.params.id;
+        
+        const viewedProduct = await Product.findById(productId); 
+        
+        return res.status(200).json({
+            message:"fetched product details",
+            product:viewedProduct,
+            companyName:req.company.name
+        });
+    }catch(error){
+        console.log("View Product Controller Error:", error.message);
+        return res.status(500).json({
+            message: "Internal server error in fetching product details"
+        });
+    }
+}

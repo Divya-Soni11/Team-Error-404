@@ -38,20 +38,6 @@ export default function Sidebar() {
           Dashboard
         </NavLink>
 
-        <NavLink
-          to="/catalog"
-          className={({ isActive }) =>
-            `flex items-center gap-4 px-4 py-4 rounded-xl text-xl ${
-              isActive
-                ? "bg-slate-800 text-cyan-400"
-                : "text-white hover:bg-slate-900"
-            }`
-          }
-        >
-          <FaBox />
-          Catalog
-        </NavLink>
-
         {role === "user" && (
           <NavLink
             to="/diagnostic"
@@ -81,22 +67,9 @@ export default function Sidebar() {
               }
             >
               <FaBuilding />
-              Company
+              Add Product
             </NavLink>
 
-            <NavLink
-              to="/analytics"
-              className={({ isActive }) =>
-                `flex items-center gap-4 px-4 py-4 rounded-xl text-xl ${
-                  isActive
-                    ? "bg-slate-800 text-cyan-400"
-                    : "text-white hover:bg-slate-900"
-                }`
-              }
-            >
-              <FaChartBar />
-              Analytics
-            </NavLink>
           </>
         )}
       </nav>

@@ -5,7 +5,8 @@ import {
     addProduct, 
     fetchCompanyProducts, 
     updateProduct, 
-    deleteProduct 
+    deleteProduct, 
+    viewProduct
 } from '../controllers/companyControllers.js';
 
 
@@ -21,5 +22,6 @@ router.post('/add-product', verifyCompany, productUploadFields, validateFileSize
 router.get('/my-products', verifyCompany, fetchCompanyProducts);
 router.put('/update-product/:id', verifyCompany,productUploadFields, validateFileSizes, updateProduct);
 router.delete('/delete-product/:id', verifyCompany, deleteProduct);
+router.get('/view-product/:id',verifyCompany, viewProduct);
 
 export default router;
