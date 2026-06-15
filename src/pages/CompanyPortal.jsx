@@ -2,12 +2,17 @@ import { useState } from "react";
 import API from "../data/api.js"; // Central Axios Client
 
 export default function CompanyPortal() {
+  // Core Product States
   const [productName, setProductName] = useState("");
-  const [companyName, setCompanyName] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
-  const [imageUrl, setImageUrl] = useState(""); // 🌟 Added State for Image Input Link
+  const [externalLinks, setExternalLinks] = useState(""); 
   
+  // File Binary Upload States (Matched to your backend layout collections)
+  const [productImageFile, setProductImageFile] = useState(null);
+  const [manualDocumentFile, setManualDocumentFile] = useState(null);
+
+  // Status Trackers
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -16,7 +21,7 @@ export default function CompanyPortal() {
     setError("");
     setSuccess("");
 
-    // Simple Form Validation
+    // Front-end Validation Guard
     if (!productName || !category || !description) {
       setError("Please complete all required fields (Name, Category, Description).");
       return;
@@ -25,26 +30,40 @@ export default function CompanyPortal() {
     setLoading(true);
 
     try {
-      // 🌟 Fires your dynamic addProduct backend endpoint controller
-      const response = await API.post("/company/add-product", {
-        name: productName,
-        category: category,
-        description: description,
-        // Passes the link inside an image array wrapper to fit your backend Mongoose model expectations
-        images: imageUrl ? [imageUrl] : [], 
-        companyName: companyName // Optional metadata property
+      const formData = new FormData();
+      
+      // Append core text values exactly how your backend destructured req.body
+      formData.append("name", productName);
+      formData.append("category", category);
+      formData.append("description", description);
+      formData.append("externalLinks", externalLinks); // Handled safely by your backend string splitter!
+
+      // 🌟 FIXED: The field keys here now match your backend req.files['images'] and ['manuals'] exactly!
+      if (productImageFile) {
+        formData.append("images", productImageFile); 
+      }
+      if (manualDocumentFile) {
+        formData.append("manuals", manualDocumentFile); 
+      }
+
+      // Issue POST request using multipart streaming headers
+      const response = await API.post("/company/add-product", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
-      setSuccess(response.data.message || "Product published successfully!");
+      setSuccess(response.data.message || "Product published completely with attached documents!");
       
-      // Clear Form state logs upon successful compilation
+      // Reset Form State parameters on success
       setProductName("");
-      setCompanyName("");
       setCategory("");
       setDescription("");
-      setImageUrl("");
+      setExternalLinks("");
+      setProductImageFile(null);
+      setManualDocumentFile(null);
     } catch (err) {
-      setError(err.response?.data?.message || "Internal server error while publishing asset.");
+      setError(err.response?.data?.message || "Internal server exception uploading multipart bundle.");
     } finally {
       setLoading(false);
     }
@@ -57,48 +76,27 @@ export default function CompanyPortal() {
       <div className="mb-8">
         <h1 className="text-5xl font-bold">Company Portal</h1>
         <p className="text-slate-400 mt-2">
-          Add products, upload manuals and publish AI-ready support content.
+          Add assets, stream functional binary manuals, and publish infrastructure telemetry data models.
         </p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
 
-        {/* Product Form */}
+        {/* Product Submission Console Block */}
         <div className="lg:col-span-2 bg-slate-900 rounded-2xl border border-slate-800 p-6">
-          <h2 className="text-2xl font-bold mb-6">Add New Product</h2>
+          <h2 className="text-2xl font-bold mb-6">Add New Product Asset</h2>
 
-          {/* Dynamic Banner Messaging Systems */}
-          {error && (
-            <div className="mb-5 bg-red-500/10 border border-red-500 p-4 rounded-xl text-red-400 text-sm">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="mb-5 bg-green-500/10 border border-green-500 p-4 rounded-xl text-green-400 text-sm">
-              {success}
-            </div>
-          )}
+          {error && <div className="mb-5 bg-red-500/10 border border-red-500 p-4 rounded-xl text-red-400 text-sm">{error}</div>}
+          {success && <div className="mb-5 bg-green-500/10 border border-green-500 p-4 rounded-xl text-green-400 text-sm">{success}</div>}
 
           <div className="space-y-5">
             <div>
               <label className="block mb-2 text-slate-300">Product Name *</label>
               <input
                 type="text"
-                placeholder="Enter product name (e.g., Galaxy A57 5G)"
+                placeholder="e.g., Galaxy A57 5G"
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
-                disabled={loading}
-                className="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-cyan-500 text-white disabled:opacity-50"
-              />
-            </div>
-
-            <div>
-              <label className="block mb-2 text-slate-300">Company Name (Optional)</label>
-              <input
-                type="text"
-                placeholder="Enter company name override"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
                 disabled={loading}
                 className="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-cyan-500 text-white disabled:opacity-50"
               />
@@ -115,7 +113,7 @@ export default function CompanyPortal() {
                 <option value="">Select Category</option>
                 <option value="Mobile Phone">Mobile Phone</option>
                 <option value="Air Conditioner">Air Conditioner</option>
-                <option value="Water Purifier">Water Purifier</option>
+                <option value="Television">Television</option>
                 <option value="Washing Machine">Washing Machine</option>
                 <option value="Consumer Electronics">Consumer Electronics</option>
               </select>
@@ -124,8 +122,8 @@ export default function CompanyPortal() {
             <div>
               <label className="block mb-2 text-slate-300">Product Description *</label>
               <textarea
-                rows="5"
-                placeholder="Describe structural technical specifications, model attributes, and features..."
+                rows="4"
+                placeholder="Outline asset architectural parameters..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 disabled={loading}
@@ -133,99 +131,61 @@ export default function CompanyPortal() {
               />
             </div>
 
-            {/* 🌟 NEW: Product Showcase Image URL Link Input Field */}
+            {/* External Reference Links */}
             <div>
-              <label className="block mb-2 text-slate-300">Product Image Link / URL</label>
+              <label className="block mb-2 text-slate-300">External Links (Comma Separated)</label>
               <input
-                type="url"
-                placeholder="Paste display image address (https://images.unsplash.com/...)"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
+                type="text"
+                placeholder="https://example1.com, https://example2.com"
+                value={externalLinks}
+                onChange={(e) => setExternalLinks(e.target.value)}
                 disabled={loading}
                 className="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-cyan-500 text-cyan-400 font-mono text-sm disabled:opacity-50"
               />
             </div>
 
+            {/* Image File Selector */}
+            <div>
+              <label className="block mb-2 text-slate-300">Upload Product Image File</label>
+              <div className="flex items-center gap-4 bg-slate-800 border border-slate-700 rounded-xl p-3">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setProductImageFile(e.target.files[0])}
+                  disabled={loading}
+                  className="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-slate-700 file:text-white hover:file:bg-slate-600 cursor-pointer w-full"
+                />
+              </div>
+              {productImageFile && <p className="text-xs text-cyan-400 mt-1.5 font-mono">Selected: {productImageFile.name}</p>}
+            </div>
+
+            {/* Manual Document Selector */}
+            <div>
+              <label className="block mb-2 text-slate-300">Upload Product Manual Document (PDF, Docx)</label>
+              <div className="flex items-center gap-4 bg-slate-800 border border-slate-700 rounded-xl p-3">
+                <input
+                  type="file"
+                  accept=".pdf,.docx,.doc"
+                  onChange={(e) => setManualDocumentFile(e.target.files[0])}
+                  disabled={loading}
+                  className="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-slate-700 file:text-white hover:file:bg-slate-600 cursor-pointer w-full"
+                />
+              </div>
+              {manualDocumentFile && <p className="text-xs text-green-400 mt-1.5 font-mono">Selected Document: {manualDocumentFile.name}</p>}
+            </div>
+
             <button
               onClick={handlePublish}
               disabled={loading}
-              className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold px-6 py-3 rounded-xl transition active:scale-[0.98] disabled:opacity-50"
+              className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold px-6 py-3 rounded-xl transition disabled:opacity-50 mt-4"
             >
-              {loading ? "Publishing Model..." : "Publish Product"}
+              {loading ? "Streaming Assets to Supabase..." : "Publish Product Assets"}
             </button>
           </div>
         </div>
 
-        {/* Stats Panel */}
-        <div className="space-y-6">
-          <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6">
-            <h3 className="text-xl font-bold">Products Published</h3>
-            <p className="text-5xl font-bold text-cyan-400 mt-4">124</p>
-          </div>
-
-          <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6">
-            <h3 className="text-xl font-bold">AI Manuals Processed</h3>
-            <p className="text-5xl font-bold text-green-400 mt-4">89</p>
-          </div>
-
-          <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6">
-            <h3 className="text-xl font-bold">Active Users</h3>
-            <p className="text-5xl font-bold text-purple-400 mt-4">1.2K</p>
-          </div>
-        </div>
-
-              <div>
-                <label className="block mb-2 text-slate-300">Update Category</label>
-                <select
-                  value={updateCategory}
-                  onChange={(e) => setUpdateCategory(e.target.value)}
-                  className="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-cyan-500"
-                >
-                  <option value="">Select Category</option>
-                  <option value="scooter">Electric Scooter</option>
-                  <option value="ac">Air Conditioner</option>
-                  <option value="purifier">Water Purifier</option>
-                  <option value="washing-machine">Washing Machine</option>
-                  <option value="electronics">Consumer Electronics</option>
-                </select>
-              </div>
-
-      {/* Manual Upload Section */}
-      <div className="mt-8 bg-slate-900 border border-slate-800 rounded-2xl p-8">
-        <h2 className="text-2xl font-bold mb-4">Upload Product Manual</h2>
-        <div className="border-2 border-dashed border-slate-700 rounded-2xl p-10 text-center">
-          <div className="text-5xl mb-4">📄</div>
-          <h3 className="text-xl font-semibold">Drag & Drop PDF Manual</h3>
-          <p className="text-slate-400 mt-2">
-            Upload manuals for AI troubleshooting and maintenance extraction.
-          </p>
-          <button className="mt-5 bg-slate-800 hover:bg-slate-700 px-6 py-3 rounded-xl">
-            Browse File
-          </button>
-        </div>
-      </div>
-
-      {/* Maintenance Schedule */}
-      <div className="mt-8 bg-slate-900 border border-slate-800 rounded-2xl p-8">
-        <h2 className="text-2xl font-bold mb-6">AI Extracted Maintenance Schedule</h2>
-        <div className="space-y-4">
-          <div className="bg-slate-800 p-4 rounded-xl flex justify-between">
-            <span>Battery Inspection</span>
-            <span className="text-cyan-400">Every 30 Days</span>
-          </div>
-          <div className="bg-slate-800 p-4 rounded-xl flex justify-between">
-            <span>Filter Replacement</span>
-            <span className="text-green-400">Every 90 Days</span>
-          </div>
-          <div className="bg-slate-800 p-4 rounded-xl flex justify-between">
-            <span>Motor Checkup</span>
-            <span className="text-yellow-400">Every 180 Days</span>
-          </div>
-        </div>
-        </div>
 
       </div>
-
     </div>
   );
 }
