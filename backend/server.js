@@ -16,8 +16,25 @@ const app = express();
 // 5. Establish MongoDB Database Connection
 connectDB(); 
 
-// 6. Inject Global Middlewares
-app.use(cors());
+// 🌟 6. Inject Configured CORS Middleware
+const allowedOrigins = ['http://localhost:5173'];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps, curl, or Postman)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Blocked by CORS policy: Security boundary violation.'));
+        }
+    },
+    credentials: true, // 🌟 Allows cookies, authorization headers, or TLS client certificates across origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+}));
+
 app.use(express.json()); // Parses incoming JSON payloads into req.body
 
 // 7. Mount Application Route Controllers

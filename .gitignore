@@ -1,4 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Environment
+venv/
+.venv/
+
+# Environment Variables
+.env
+
+# Chroma DB
+chroma_db/
+
+# VS Code
+.vscode/
+
 # Logs
+*.log
+
+
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+
+chroma_db/
+.vscode/
+*.log# Logs
 logs
 *.log
 npm-debug.log*
@@ -22,3 +51,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+node_modules/
+/node_modules
